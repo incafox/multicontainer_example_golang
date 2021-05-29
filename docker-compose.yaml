@@ -1,0 +1,52 @@
+version: '3.4'
+services:
+  db_svc_driver:
+    container_name: dbsvc_driver
+    image: mongo
+    ports:
+      - "27017:27017"
+    networks:
+      - network
+  db_svc_auth:
+    container_name: dbsvc_auth
+    image: postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DB=svc_auth
+        #volumes:
+        #- ./postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - network
+  svc_driver_go:
+    build:
+      context: ./svc_driver
+      dockerfile: ./Dockerfile
+    restart: 'always'
+    ports:
+      - "5000:5000"
+    expose:
+      - "4000"
+    depends_on:
+      - db_svc_driver
+    networks:
+      - network
+  svc_auth_go:
+    build:
+      context: ./svc_auth
+      dockerfile: ./Dockerfile
+    restart: 'always'
+    ports:
+      - "4000:4000"
+    expose:
+      - "5000"
+    depends_on:
+      - db_svc_auth
+    networks:
+      - network
+  
+networks:
+  network: {}
+
